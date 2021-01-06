@@ -1,4 +1,4 @@
-# Instalar Freeradius+Daloradius+MariaDB+Apache2 en Debian 10 Buster
+# Instalar FreeRADIUS+daloRADIUS+MariaDB+Apache2 en Debian 10 Buster
 
 ## Autor
 
@@ -6,13 +6,13 @@
 
 ### Introducción
 
-#### ¿Qué es `Freeradius`?
+#### ¿Qué es `FreeRADIUS`?
 
 [FreeRADIUS](https://freeradius.org/) es una suite `RADIUS` gratuita, modular y de alto rendimiento, desarrollada y distribuida bajo la Licencia Pública General GNU, versión 2, y se puede descargar y usar libre de costo.
 
 `RADIUS` (Remote Authentication Dial-In User Server), es un protocolo ampliamente empleado para controlar el acceso a servicios en red. Permite gestionar la autenticación, autorización y registro de usuarios remotos sobre un determinado recurso. La tupla "autenticación, autorización y registro" es más conocida como `AAA`, proveniente del acrónimo inglés `Authentication, Authorization and Accounting`.
 
-#### ¿Qué es `Daloradius`?
+#### ¿Qué es `daloEADIUS`?
 
 [daloRADIUS](http://www.daloradius.com), se basa en una implementación de `FreeRADIUS` con un servidor de base de datos que actúa como backend.
 
@@ -70,7 +70,7 @@ deb http://deb.debian.org/debian/ buster-updates main contrib
 deb http://deb.debian.org/debian/ oldstable main contrib
 ```
 
-> **NOTA**: La definición del repositorio `oldstable`, obedece a la dependencia de `Daloradius` del paquete `php-bd`, no disponible en `Debian 10 Buster`.
+>**NOTA**: La definición del repositorio `oldstable`, obedece a la dependencia de `Daloradius` del paquete `php-bd`, no disponible en `Debian 10 Buster`.
 
 - Actualizar el sistema
 
@@ -221,7 +221,26 @@ MariaDB [(none)]> QUIT;
 systemctl restart mariadb.service
 ```
 
-### Instalar y configurar servidor `Freeradius`
+### Instalar y configurar servidor `FreeRADIUS`
+
+Si se desea utilizar la última versión estable proporcionada por los desarrolladores, se deben seguir estos sencillos pasos:
+
+- Agregar la firma `PGP` del repositorio de paquetes `FreeRADIUS`
+
+```bash
+apt-key adv --keyserver keys.gnupg.net --recv-key 0x41382202
+```
+
+- Agregar al final del fichero `/etc/apt/sources.list`
+
+```bash
+deb https://packages.networkradius.com/releases/debian-buster/ buster main
+```
+
+- Actualizar base de datos de paquetes
+```bash
+ apt update
+```
 
 - Instalar paquetes necesarios
 
