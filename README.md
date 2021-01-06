@@ -14,7 +14,7 @@
 
 #### ¿Qué es `Daloradius`?
 
-[daloRADIUS](http://www.daloradius.com), se basa en una implementación de [FreeRADIUS](http://www.freeradius.org) con un servidor de base de datos que actúa como backend.
+[daloRADIUS](http://www.daloradius.com), se basa en una implementación de `FreeRADIUS` con un servidor de base de datos que actúa como backend.
 
 `daloRADIUS` es una aplicación avanzada de administración web `RADIUS` destinada a administrar hotspots e implementaciones de ISP de propósito general. Cuenta con gestión de usuarios, informes gráficos, contabilidad, un motor de facturación y se integra con `GoogleMaps` para la localización geográfica. Está escrito en `PHP` y `JavaScript` y utiliza una capa de abstracción de base de datos, lo que significa que es compatible con muchos sistemas de bases de datos, entre ellos los populares `MySQL`, `MariaDB`, `PostgreSQL`, `Sqlite` y `MSSQL`.
 
