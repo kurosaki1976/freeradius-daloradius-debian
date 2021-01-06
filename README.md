@@ -8,9 +8,9 @@
 
 #### ¿Qué es `Freeradius`?
 
-`RADIUS` (Remote Authentication Dial-In User Server), es un protocolo ampliamente empleado para controlar el acceso a servicios en red. Permite gestionar la autenticación, autorización y registro de usuarios remotos sobre un determinado recurso. La tupla "autenticación, autorización y registro" es más conocida como `AAA`, proveniente del acrónimo inglés `Authentication, Authorization and Accounting`.
-
 [FreeRADIUS](https://freeradius.org/) es una suite `RADIUS` gratuita, modular y de alto rendimiento, desarrollada y distribuida bajo la Licencia Pública General GNU, versión 2, y se puede descargar y usar gratuitamente.
+
+`RADIUS` (Remote Authentication Dial-In User Server), es un protocolo ampliamente empleado para controlar el acceso a servicios en red. Permite gestionar la autenticación, autorización y registro de usuarios remotos sobre un determinado recurso. La tupla "autenticación, autorización y registro" es más conocida como `AAA`, proveniente del acrónimo inglés `Authentication, Authorization and Accounting`.
 
 #### ¿Qué es `Daloradius`?
 
