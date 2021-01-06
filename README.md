@@ -4,6 +4,20 @@
 
 - [Ixen Rodríguez Pérez - kurosaki1976](ixenrp1976@gmail.com)
 
+### Introducción
+
+#### ¿Qué es `Freeradius`?
+
+`RADIUS` (Remote Authentication Dial-In User Server), es un protocolo ampliamente empleado para controlar el acceso a servicios en red. Permite gestionar la "autenticación, autorización y registro" de usuarios remotos sobre un determinado recurso. La tupla “autenticación, autorización y registro” es más conocida como `AAA`, proveniente del acrónimo inglés "Authentication, Authorization and Accounting".
+
+[FreeRADIUS](https://freeradius.org/) es una suite `RADIUS` gratuita, modular y de alto rendimiento, desarrollada y distribuida bajo la Licencia Pública General GNU, versión 2, y se puede descargar y usar gratuitamente.
+
+#### ¿Qué es `Daloradius`?
+
+[daloRADIUS](http://www.daloradius.com), se basa en una implementación de [FreeRADIUS](http://www.freeradius.org) con un servidor de base de datos que actúa como backend.
+
+`daloRADIUS` es una aplicación avanzada de administración web `RADIUS` destinada a administrar hotspots e implementaciones de ISP de propósito general. Cuenta con gestión de usuarios, informes gráficos, contabilidad, un motor de facturación y se integra con `GoogleMaps` para la localización geográfica. Está escrito en `PHP` y `JavaScript` y utiliza una capa de abstracción de base de datos, lo que significa que es compatible con muchos sistemas de bases de datos, entre ellos los populares `MySQL`, `MariaDB`, `PostgreSQL`, `Sqlite` y `MSSQL`.
+
 ### Requisitos previos
 
 - Instalar servidor (físico, máquina virtual o contenedor) con sistema operativo `Debian 10 Buster`, básico
@@ -18,10 +32,6 @@ dpkg-reconfigure tzdata
 - Establecer nombre `FQDN` del sistema
 
 ```bash
-hostnamectl set-hostname daloradius.example.tld
-```
-
-```bash
 nano /etc/hosts
 
 127.0.0.1       localhost.localdomain    localhost
@@ -33,8 +43,10 @@ nano /etc/hosts
 ```bash
 nano /etc/network/interfaces
 
-auto lo eth0
+auto lo
 iface lo inet loopback
+
+auto eth0
 iface eth0 inet static
         address 192.168.0.100
         netmask 255.255.255.0
@@ -42,6 +54,12 @@ iface eth0 inet static
 ```
 
 - Configurar repositorio de paquetes
+
+```bash
+nano /etc/apt/apt.conf
+
+Acquire::Check-Valid-Until "false";
+```
 
 ```bash
 nano /etc/apt/sources.list
@@ -52,11 +70,7 @@ deb http://deb.debian.org/debian/ buster-updates main contrib
 deb http://deb.debian.org/debian/ oldstable main contrib
 ```
 
-```bash
-nano /etc/apt/apt.conf
-
-Acquire::Check-Valid-Until "false";
-```
+> **NOTA**: La definición del repositorio `oldstable`, obedece a la dependencia de `Daloradius` del paquete `php-bd`, no disponible en `Debian 10 Buster`.
 
 - Actualizar el sistema
 
@@ -64,11 +78,12 @@ Acquire::Check-Valid-Until "false";
 apt update && apt full-upgrade -y
 ```
 
-- Crear certificado de seguridad TLS/SSL
+- Crear certificado de seguridad `TLS/SSL`
 
 ```bash
 openssl req -x509 -nodes -days 3650 -sha512 \
-    -subj "/C=CU/ST=Provincia/L=Ciudad/O=EXAMPLE TLD/OU=IT/CN=daloradius.example.tld/emailAddress=postmaster@example.tld/" \
+    -subj "/C=CU/ST=Provincia/L=Ciudad/O=EXAMPLE TLD/OU=IT/CN=Daloradius/emailAddress=postmaster@example.tld/" \
+    -addext "subjectAltName = DNS:daloradius.example.tld,IP:192.168.0.100" \
     -newkey rsa:4096 \
     -out /etc/ssl/certs/daloradius.crt \
     -keyout /etc/ssl/private/daloradius.key
@@ -150,7 +165,7 @@ nano /etc/apache2/sites-available/daloradius.conf
 </IfModule>
 ```
 
-- Activar módulos necesarios, `VirtualHost` y reiniciar servidor web
+- Activar módulos necesarios, `VirtualHost` y reiniciar el servicio
 
 ```bash
 a2enmod rewrite ssl
@@ -184,8 +199,7 @@ Reload privilege tables now? [Y/n] y
 
 ```bash
 mysql -u root
-```
-```sql
+
 MariaDB [(none)]> UPDATE mysql.user SET plugin = 'mysql_native_password' WHERE User = 'root';
 MariaDB [(none)]> FLUSH PRIVILEGES;
 MariaDB [(none)]> QUIT;
@@ -195,8 +209,7 @@ MariaDB [(none)]> QUIT;
 
 ```bash
 mysql -u root -p
-```
-```sql
+
 MariaDB [(none)]> GRANT ALL ON *.* TO 'db_admin'@'%' IDENTIFIED BY 'P@s$w0rd' WITH GRANT OPTION;
 MariaDB [(none)]> FLUSH PRIVILEGES;
 MariaDB [(none)]> QUIT;
@@ -220,14 +233,11 @@ apt install freeradius freeradius-mysql freeradius-utils
 
 ```bash
 mysql -u db_admin -p
-```
-```sql
+
 MariaDB [(none)]> CREATE DATABASE radius;
 MariaDB [(none)]> FLUSH PRIVILEGES;
 MariaDB [(none)]> QUIT;
-```
 
-```sql
 mysql -u db_admin -p radius < /etc/freeradius/3.0/mods-config/sql/main/mysql/schema.sql
 ```
 
@@ -239,9 +249,6 @@ ln -s /etc/freeradius/3.0/mods-available/sql /etc/freeradius/3.0/mods-enabled/
 
 ```bash
 nano /etc/freeradius/3.0/mods-enabled/sql
-```
-```sql
-(...)
 
 sql {
     driver = "rlm_sql_mysql"
@@ -254,11 +261,11 @@ sql {
 }
 read_clients = yes
 client_table = "nas"
-
-(...)
 ```
 
-> **NOTA**: Se deben descomentar las líneas de configuración que contengan `-sql`, existentes en los ficheros `/etc/freeradius/3.0/sites-available/default` y `/etc/freeradius/3.0/sites-available/inner-tunnel`.
+> **NOTA**: Sólo se muestran los parámetros modificados.
+
+Además, se deben descomentar las líneas de configuración que contengan `-sql`, existentes en los ficheros `/etc/freeradius/3.0/sites-available/default` y `/etc/freeradius/3.0/sites-available/inner-tunnel`.
 
 - Establecer permisos y reiniciar el servicio
 
@@ -274,10 +281,8 @@ systemctl restart freeradius.service
 
 ```bash
 cd /opt/daloradius
-```
-```sql
-mysql -u db_admin -p radius < contrib/db/fr2-mysql-daloradius-and-freeradius.sql
 mysql -u db_admin -p radius < contrib/db/mysql-daloradius.sql
+mysql -u db_admin -p radius < contrib/db/fr2-mysql-daloradius-and-freeradius.sql
 ```
 
 - Establecer permisos
@@ -294,17 +299,15 @@ chmod 664 library/daloradius.conf.php
 nano library/daloradius.conf.php
 ```
 ```php
-(...)
-
 $configValues['CONFIG_DB_ENGINE'] = 'mysqli';
 $configValues['CONFIG_DB_HOST'] = 'localhost';
 $configValues['CONFIG_DB_PORT'] = '3306';
 $configValues['CONFIG_DB_USER'] = 'db_admin';
 $configValues['CONFIG_DB_PASS'] = 'P@s$w0rd';
 $configValues['CONFIG_DB_NAME'] = 'radius';
-
-(...)
 ```
+
+> **NOTA**: Sólo se muestran los parámetros modificados.
 
 - Reiniciar los servicios correspondientes
 
@@ -314,11 +317,14 @@ systemctl restart freeradius.service apache2.service
 
 ### Acceder a `Daloradius`
 
-Finalmente, acceder a la aplicación web, introduciendo la dirección `https://daloradius.example.tld/`, en el navegador de preferencia y usar el par usuario/contraseña (`administrator/radius`) para efectuar el `login` y comezar a explotar el sistema.
+Finalmente, acceder a la aplicación web, introduciendo la dirección `http://daloradius.example.tld/`, en el navegador de preferencia y usar el par usuario/contraseña (`administrator/radius`) para efectuar el `login` y comenzar a explotar el sistema.
+
+> **NOTA**: Se debe cambiar la contraseña por defecto del usuario `Administrator`; así como renombrar el fichero `/opt/daloradius/update.php`.
 
 ### Referencias
 
+* Fichero `INSTALL` del paquete [daloradius-master.zip](https://github.com/lirantal/daloradius/archive/master.zip)
 * [Install FreeRADIUS and Daloradius on Debian 10 (Buster)](https://computingforgeeks.com/install-freeradius-and-daloradius-on-debian/)
 * [How To Install MariaDB on Debian 10 Buster](https://computingforgeeks.com/how-to-install-mariadb-on-debian-10-buster/)
-* [Install FreeRADIUS with daloRADIUS on Debian 9](https://kifarunix.com/install-freeradius-with-daloradius-on-debian-9/)
 * [Error installing php-db in Debian 10 Buster](https://unix.stackexchange.com/questions/545755/error-installing-php-db-in-debian-10-buster)
+* [Install FreeRADIUS with daloRADIUS on Debian 9](https://kifarunix.com/install-freeradius-with-daloradius-on-debian-9/)
