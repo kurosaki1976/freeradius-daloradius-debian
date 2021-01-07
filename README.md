@@ -93,9 +93,10 @@ chmod 0444 /etc/ssl/certs/daloradius.crt
 chmod 0400 /etc/ssl/private/daloradius.key
 ```
 
-- Descargar y desplegar `Daloradius`
+- Descargar y desplegar `daloRADIUS`
 
 ```bash
+apt install unzip
 cd /opt
 wget https://github.com/lirantal/daloradius/archive/master.zip
 unzip daloradius-master.zip
@@ -107,7 +108,7 @@ mv daloradius-master/ daloradius/
 - Instalar paquetes necesarios
 
 ```bash
-apt install apache2 php libapache2-mod-php php-{gd,common,mail,mail-mime,mysql,pear,mbstring,xml,curl} unzip
+apt install apache2 php libapache2-mod-php php-{gd,common,mail,mail-mime,mysql,pear,mbstring,xml,curl}
 apt install php-db && apt-mark hold php-db
 ```
 
@@ -248,6 +249,8 @@ deb https://packages.networkradius.com/releases/debian-buster/ buster main
 apt install freeradius freeradius-mysql freeradius-utils
 ```
 
+> **NOTA**: Si se instala la última versión estable disponible en el repositorio de paquetes oficial de `freeRADIUS`, en la ubicación de los ficheros de configuración del servicio, se elimina la versión del paquete, es decir de `/etc/freeradius/3.0/` pasaría a ser `/etc/freeradius/`.
+
 - Crear e inicializar base de datos
 
 ```bash
@@ -270,8 +273,8 @@ ln -s /etc/freeradius/3.0/mods-available/sql /etc/freeradius/3.0/mods-enabled/
 nano /etc/freeradius/3.0/mods-enabled/sql
 
 sql {
-    driver = "rlm_sql_mysql"
     dialect = "mysql"
+    driver = "rlm_sql_${dialect}"
     server = "localhost"
     port = 3306
     login = "db_admin"
@@ -294,28 +297,28 @@ chown -R freerad:freerad /etc/freeradius/3.0/mods-enabled/sql
 systemctl restart freeradius.service
 ```
 
-### Configurar `Daloradius`
-
-- Poblar la base de datos
-
-```bash
-cd /opt/daloradius
-mysql -u db_admin -p radius < contrib/db/mysql-daloradius.sql
-mysql -u db_admin -p radius < contrib/db/fr2-mysql-daloradius-and-freeradius.sql
-```
+### Configurar `daloRADIUS`
 
 - Establecer permisos
 
 ```bash
+cd /opt
 chown -R www-data:www-data daloradius/
-cp library/daloradius.conf.php.sample library/daloradius.conf.php
-chmod 664 library/daloradius.conf.php
+cp daloradius/library/daloradius.conf.php.sample daloradius/library/daloradius.conf.php
+chmod 664 daloradius/library/daloradius.conf.php
+```
+
+- Actualizar la base de datos
+
+```bash
+mysql -u db_admin -p radius < daloradius/contrib/db/mysql-daloradius.sql
+mysql -u db_admin -p radius < daloradius/contrib/db/fr2-mysql-daloradius-and-freeradius.sql
 ```
 
 - Configurar acceso a la base de datos
 
 ```bash
-nano library/daloradius.conf.php
+nano daloradius/library/daloradius.conf.php
 ```
 ```php
 $configValues['CONFIG_DB_ENGINE'] = 'mysqli';
@@ -334,7 +337,7 @@ $configValues['CONFIG_DB_NAME'] = 'radius';
 systemctl restart freeradius.service apache2.service
 ```
 
-### Acceder a `Daloradius`
+### Acceder a `daloRADIUS`
 
 Finalmente, acceder a la aplicación web, introduciendo la dirección `http://daloradius.example.tld/`, en el navegador de preferencia y usar el par usuario/contraseña (`administrator/radius`) para efectuar el `login` y comenzar a explotar el sistema.
 
